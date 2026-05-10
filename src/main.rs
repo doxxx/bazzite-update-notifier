@@ -129,8 +129,13 @@ fn init_logging(verbose: bool) {
     // Precedence: `--verbose` > `RUST_LOG` > "info".
     // `--verbose` should be a no-surprises shortcut, so it takes priority
     // over an existing `RUST_LOG` (e.g. `RUST_LOG=warn`).
+    //
+    // zbus::object_server logs every unhandled D-Bus method at DEBUG,
+    // including `ProvideXdgActivationToken` which the desktop calls on
+    // SNI items but ksni doesn't implement. That's benign noise, so we
+    // keep zbus at warn even in verbose mode.
     let filter = if verbose {
-        EnvFilter::new("debug")
+        EnvFilter::new("debug,zbus=warn")
     } else {
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"))
     };
