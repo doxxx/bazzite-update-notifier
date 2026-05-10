@@ -24,6 +24,7 @@ BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_USER_DIR="${CONFIG_DIR}/systemd/user"
 AUTOSTART_DIR="${CONFIG_DIR}/autostart"
 ICON_DIR="${DATA_DIR}/icons/hicolor/64x64/apps"
+CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/bazzite-update-notifier"
 
 # Resolve where this script lives so it works whether invoked by absolute
 # or relative path.
@@ -37,7 +38,7 @@ if [[ ! -x "${BIN_SRC}" ]]; then
     exit 1
 fi
 
-mkdir -p "${BIN_DIR}" "${SYSTEMD_USER_DIR}" "${AUTOSTART_DIR}" "${ICON_DIR}"
+mkdir -p "${BIN_DIR}" "${SYSTEMD_USER_DIR}" "${AUTOSTART_DIR}" "${ICON_DIR}" "${CACHE_DIR}"
 
 echo "Installing binary -> ${BIN_DIR}/bazzite-update-notifier"
 install -m 0755 "${BIN_SRC}" "${BIN_DIR}/bazzite-update-notifier"
