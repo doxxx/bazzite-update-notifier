@@ -1,0 +1,23 @@
+# Bazzite Update Notifier — shipped defaults.
+#
+# User overrides live at:
+#   $XDG_CONFIG_HOME/bazzite-update-notifier/config.toml
+# (default ~/.config/bazzite-update-notifier/config.toml)
+
+mode = "tray"                  # "toast" | "tray" | "both"
+check_interval_hours = 4
+initial_delay_seconds = 60     # delay first check after login
+
+[github]
+owner = "ublue-os"
+repo  = "bazzite"
+
+[discourse]
+base = "https://universal-blue.discourse.group"
+tag  = "bazzite-news"
+
+[behavior]
+# When the toast body is clicked, which URL to open:
+toast_default_action = "github"   # "github" | "discourse"
+# Suppress re-toast for the same checksum after the user dismisses it:
+suppress_after_dismiss = true

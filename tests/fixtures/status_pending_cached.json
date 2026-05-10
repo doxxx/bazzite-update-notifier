@@ -1,0 +1,23 @@
+{
+  "deployments": [
+    {
+      "id": "bazzite-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0",
+      "osname": "bazzite",
+      "checksum": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "version": "42.20260510.0",
+      "timestamp": 1746893400,
+      "booted": true,
+      "staged": false,
+      "pinned": false,
+      "container-image-reference": "ostree-image-signed:docker://ghcr.io/ublue-os/bazzite:testing",
+      "container-image-reference-digest": "sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  ],
+  "cached-update": {
+    "checksum": "feedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedface",
+    "version": "42.20260513.0",
+    "timestamp": 1747152600,
+    "container-image-reference": "ostree-image-signed:docker://ghcr.io/ublue-os/bazzite:testing"
+  },
+  "transaction": null
+}

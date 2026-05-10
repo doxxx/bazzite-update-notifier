@@ -1,0 +1,55 @@
+[package]
+name = "bazzite-update-notifier"
+version = "0.1.0"
+edition = "2021"
+description = "User-session daemon that surfaces Bazzite (rpm-ostree) updates as toasts and/or a tray icon."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/gordonmessmer/BazziteUpdateNotifier"
+readme = "README.md"
+keywords = ["bazzite", "rpm-ostree", "notifier", "tray", "linux"]
+categories = ["command-line-utilities"]
+
+[lib]
+name = "bazzite_update_notifier"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bazzite-update-notifier"
+path = "src/main.rs"
+
+[features]
+default = []
+# Enables the --debug-fake-update CLI flag for end-to-end testing
+# without an actual pending image. Always enabled in dev/test builds
+# via cfg(debug_assertions); also exposed as an explicit feature so
+# release builds can opt in for QA.
+debug-fake = []
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "signal", "fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = { version = "0.4", features = ["serde"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+notify-rust = { version = "4", features = ["d"] }
+ksni = "0.3"
+image = { version = "0.25", default-features = false, features = ["png"] }
+webbrowser = "1"
+dirs = "5"
+once_cell = "1"
+tempfile = "3"
+
+[dev-dependencies]
+serde_json = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+opt-level = "z"
+panic = "abort"
