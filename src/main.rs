@@ -204,19 +204,6 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
     let recheck = Arc::new(Notify::new());
     let force_resurface = Arc::new(std::sync::atomic::AtomicBool::new(false));
 
-    // Initial sleep — gives the user session time to fully start before
-    // we hit the network. Skipped in fake mode so QA cycles are fast.
-    if !cli.fake_update() {
-        debug!("initial delay: {}s", config.initial_delay_seconds);
-        let initial = Duration::from_secs(config.initial_delay_seconds);
-        tokio::select! {
-            _ = tokio::time::sleep(initial) => {}
-            _ = recheck.notified() => {
-                debug!("recheck during initial delay");
-            }
-        }
-    }
-
     let interval = Duration::from_secs(config.check_interval_hours * 3600);
 
     // SIGTERM/SIGINT handler so systemd `stop` is graceful.
@@ -225,12 +212,30 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
     let shutdown = Arc::new(Notify::new());
     spawn_signal_handler(shutdown.clone());
 
-    // Spawn the tray-event pump if we have a tray.
+    // Spawn the tray-event pump before the initial delay so that
+    // "Recheck now" during the startup window correctly wakes the delay
+    // select and skips straight to the first check.
     if let Some(rx) = tray_rx.take() {
         let recheck = recheck.clone();
         let force = force_resurface.clone();
         let shutdown = shutdown.clone();
         tokio::spawn(async move { pump_tray_events(rx, recheck, force, shutdown).await });
+    }
+
+    // Initial sleep — gives the user session time to fully start before
+    // we hit the network. Skipped in fake mode so QA cycles are fast.
+    if !cli.fake_update() {
+        debug!("initial delay: {}s", config.initial_delay_seconds);
+        let initial = Duration::from_secs(config.initial_delay_seconds);
+        tokio::select! {
+            _ = tokio::time::sleep(initial) => {}
+            _ = recheck.notified() => {
+                debug!("recheck during initial delay; skipping to first check");
+            }
+            _ = shutdown.notified() => {
+                return Ok(());
+            }
+        }
     }
 
     loop {
