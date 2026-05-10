@@ -1,0 +1,37 @@
+[
+  {
+    "tag_name": "testing-20260513",
+    "name": "Testing 42.20260513.0",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/testing-20260513",
+    "draft": false,
+    "prerelease": true
+  },
+  {
+    "tag_name": "stable-20260512",
+    "name": "Stable 42.20260512.0",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/stable-20260512",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "stable-20260510",
+    "name": "Stable 42.20260510.0",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/stable-20260510",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "unstable-20260513",
+    "name": "Unstable 42.20260513.0",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/unstable-20260513",
+    "draft": false,
+    "prerelease": true
+  },
+  {
+    "tag_name": "testing-20260510",
+    "name": "Testing 42.20260510.0",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/testing-20260510",
+    "draft": false,
+    "prerelease": true
+  }
+]

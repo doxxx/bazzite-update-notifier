@@ -1,0 +1,23 @@
+[Unit]
+Description=Bazzite Update Notifier
+Documentation=https://github.com/doxxx/BazziteUpdateNotifier
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/bazzite-update-notifier
+Restart=on-failure
+RestartSec=30s
+# Lightly hardened. The daemon only reads from rpm-ostree, makes outbound
+# HTTPS requests, and writes its state file under $XDG_STATE_HOME.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+# Allow writes to the daemon's own state and cache dirs.
+# %S = $XDG_STATE_HOME, %C = $XDG_CACHE_HOME (used for the toast icon).
+ReadWritePaths=%S/bazzite-update-notifier %C/bazzite-update-notifier
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical-session.target

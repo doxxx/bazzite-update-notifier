@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Bazzite Update Notifier
+Comment=Notifies you when a Bazzite (rpm-ostree) update is available.
+Exec=%h/.local/bin/bazzite-update-notifier
+Icon=bazzite-update-notifier
+Categories=System;Utility;
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+# Used by KDE/GNOME to associate notifications with this entry.
+StartupNotify=false

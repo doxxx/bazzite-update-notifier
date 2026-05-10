@@ -1,0 +1,30 @@
+{
+  "topic_list": {
+    "topics": [
+      {
+        "id": 1003,
+        "title": "Bazzite Testing Update — 42.20260513",
+        "slug": "bazzite-testing-update-42-20260513",
+        "created_at": "2026-05-13T12:00:00.000Z"
+      },
+      {
+        "id": 1002,
+        "title": "Bazzite Stable Update — 42.20260512",
+        "slug": "bazzite-stable-update-42-20260512",
+        "created_at": "2026-05-12T12:00:00.000Z"
+      },
+      {
+        "id": 1001,
+        "title": "Bazzite Unstable Update — 42.20260513",
+        "slug": "bazzite-unstable-update-42-20260513",
+        "created_at": "2026-05-13T08:00:00.000Z"
+      },
+      {
+        "id": 1000,
+        "title": "Bazzite Stable Update — 42.20260510",
+        "slug": "bazzite-stable-update-42-20260510",
+        "created_at": "2026-05-10T12:00:00.000Z"
+      }
+    ]
+  }
+}
