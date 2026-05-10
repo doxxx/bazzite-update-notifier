@@ -1,2 +1,3 @@
 [tools]
+act = "latest"
 rust = "latest"
