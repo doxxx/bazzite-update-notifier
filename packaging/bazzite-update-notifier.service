@@ -14,8 +14,8 @@ RestartSec=30s
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-# Allow writes to the daemon's own state and cache dirs.
-# %S = $XDG_STATE_HOME, %C = $XDG_CACHE_HOME (used for the toast icon).
+# Writable runtime dirs — must exist at service start (install.sh creates them).
+# %S = $XDG_STATE_HOME, %C = $XDG_CACHE_HOME (toast icon cache).
 ReadWritePaths=%S/bazzite-update-notifier %C/bazzite-update-notifier
 PrivateTmp=true
 
