@@ -41,6 +41,8 @@ pub struct TrayPresentation {
     pub active: bool,
     /// Pending version label, when `active`.
     pub pending_version: Option<String>,
+    /// True if the pending update is staged (downloaded and ready to reboot into).
+    pub staged: bool,
     /// Resolved release-notes URLs, when known.
     pub links: Option<ReleaseLinks>,
     /// Wall-clock time of the last successful check.
@@ -113,9 +115,14 @@ impl Tray for TrayState {
                 .pending_version
                 .as_deref()
                 .unwrap_or("a new build");
+            let desc = if self.presentation.staged {
+                format!("Version {v} waiting for reboot")
+            } else {
+                format!("Version {v} ready to install")
+            };
             (
                 "Bazzite update available".to_string(),
-                format!("Version {v} ready to install"),
+                desc,
             )
         } else {
             let when = match self.presentation.last_check_at {
@@ -165,10 +172,14 @@ impl Tray for TrayState {
             let header = match (
                 self.presentation.pending_version.as_deref(),
                 self.presentation.links.as_ref().map(|l| l.channel.label()),
+                self.presentation.staged,
             ) {
-                (Some(v), Some(ch)) => format!("Bazzite {v} ({ch})"),
-                (Some(v), None) => format!("Bazzite {v} available"),
-                (None, _) => "Bazzite update available".to_string(),
+                (Some(v), Some(ch), true) => format!("Bazzite {v} ({ch}) — waiting for reboot"),
+                (Some(v), Some(ch), false) => format!("Bazzite {v} ({ch})"),
+                (Some(v), None, true) => format!("Bazzite {v} — waiting for reboot"),
+                (Some(v), None, false) => format!("Bazzite {v} available"),
+                (None, _, true) => "Bazzite update — waiting for reboot".to_string(),
+                (None, _, false) => "Bazzite update available".to_string(),
             };
             items.push(
                 StandardItem {

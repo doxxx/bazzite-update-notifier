@@ -24,25 +24,29 @@ fn no_pending_fixture() {
 fn pending_staged_fixture() {
     let json = include_str!("fixtures/status_pending_staged.json");
     let outcome = parse_status(json).expect("parse");
-    let (pending, booted) = match outcome {
-        CheckOutcome::UpdateAvailable { pending, booted } => (pending, booted),
+    let (pending, booted, staged) = match outcome {
+        CheckOutcome::UpdateAvailable { pending, booted, staged } => (pending, booted, staged),
         other => panic!("expected UpdateAvailable, got {other:?}"),
     };
     assert_eq!(pending.version, "42.20260512.0");
     // booted is the older one.
     assert_eq!(booted.version, "42.20260510.0");
+    // This is a staged deployment.
+    assert!(staged);
 }
 
 #[test]
 fn pending_cached_update_fixture() {
     let json = include_str!("fixtures/status_pending_cached.json");
     let outcome = parse_status(json).expect("parse");
-    let pending = match outcome {
-        CheckOutcome::UpdateAvailable { pending, .. } => pending,
+    let (pending, staged) = match outcome {
+        CheckOutcome::UpdateAvailable { pending, staged, .. } => (pending, staged),
         other => panic!("expected UpdateAvailable, got {other:?}"),
     };
     assert_eq!(pending.version, "42.20260513.0");
     assert!(pending.image_ref.unwrap().ends_with(":testing"));
+    // Cached update is NOT staged (metadata only, not downloaded).
+    assert!(!staged);
 }
 
 #[test]
