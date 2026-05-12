@@ -9,14 +9,8 @@ Type=simple
 ExecStart=%h/.local/bin/bazzite-update-notifier
 Restart=on-failure
 RestartSec=30s
-# Lightly hardened. The daemon only reads from rpm-ostree, makes outbound
-# HTTPS requests, and writes its state file under $XDG_STATE_HOME.
 NoNewPrivileges=true
 ProtectSystem=strict
-ProtectHome=read-only
-# Writable runtime dirs — must exist at service start (install.sh creates them).
-# %S = $XDG_STATE_HOME, %C = $XDG_CACHE_HOME (toast icon cache).
-ReadWritePaths=%S/bazzite-update-notifier %C/bazzite-update-notifier
 PrivateTmp=true
 
 [Install]
