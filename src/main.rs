@@ -289,15 +289,32 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
         }
 
         // Sleep until the next interval, an explicit recheck, or shutdown.
-        tokio::select! {
-            _ = tokio::time::sleep(interval) => {}
-            _ = recheck.notified() => {
-                info!("recheck triggered");
+        // Use 60-second chunks so we can refresh the tray tooltip periodically.
+        let refresh_interval = Duration::from_secs(60);
+        let mut remaining = interval;
+        let mut shutdown_received = false;
+        while remaining > Duration::ZERO && !shutdown_received {
+            let chunk = remaining.min(refresh_interval);
+            tokio::select! {
+                _ = tokio::time::sleep(chunk) => {
+                    remaining = remaining.saturating_sub(chunk);
+                    // Refresh tray to update tooltip relative time.
+                    if let Some(ref h) = tray_handle {
+                        h.refresh().await;
+                    }
+                }
+                _ = recheck.notified() => {
+                    info!("recheck triggered");
+                    break;
+                }
+                _ = shutdown.notified() => {
+                    info!("shutdown signal received");
+                    shutdown_received = true;
+                }
             }
-            _ = shutdown.notified() => {
-                info!("shutdown signal received");
-                break;
-            }
+        }
+        if shutdown_received {
+            break;
         }
     }
     Ok(())

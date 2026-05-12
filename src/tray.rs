@@ -315,6 +315,13 @@ impl TrayHandle {
             })
             .await;
     }
+
+    /// Re-emit the current presentation to trigger tooltip refresh.
+    /// Used to update relative timestamps in the tooltip without changing
+    /// any presentation state.
+    pub async fn refresh(&self) {
+        self.handle.update(|_| {}).await;
+    }
 }
 
 /// Format a wall-clock instant relative to "now" — coarsely; just enough
