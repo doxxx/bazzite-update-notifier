@@ -32,6 +32,9 @@ pub enum CheckOutcome {
     UpdateAvailable {
         pending: Deployment,
         booted: Deployment,
+        /// True if the update is staged (downloaded and ready to reboot into).
+        /// False if it's a cached update (metadata known but not yet downloaded).
+        staged: bool,
     },
     /// No pending update; the booted deployment is current.
     NoUpdate { booted: Deployment },
@@ -138,12 +141,14 @@ pub fn parse_status(json: &str) -> Result<CheckOutcome> {
                 timestamp: d.timestamp,
             },
             booted,
+            staged: d.staged || d.pending,
         });
     }
 
     // Second preference: a `cached-update` block. This means the daemon has
     // pulled metadata for a newer image but it hasn't been written to a
-    // deployment slot yet. Still counts as "update available".
+    // deployment slot yet. Still counts as "update available", but it's
+    // not staged yet (requires download).
     if let Some(c) = raw.cached_update {
         // Sanity check: the cached update's checksum must differ from the
         // booted deployment, otherwise rpm-ostree is just echoing the
@@ -157,6 +162,7 @@ pub fn parse_status(json: &str) -> Result<CheckOutcome> {
                     timestamp: c.timestamp,
                 },
                 booted,
+                staged: false,
             });
         }
     }
@@ -306,28 +312,32 @@ mod tests {
     fn parse_pending_staged() {
         let json = include_str!("../tests/fixtures/status_pending_staged.json");
         let outcome = parse_status(json).expect("parse");
-        let (pending, booted) = match outcome {
-            CheckOutcome::UpdateAvailable { pending, booted } => (pending, booted),
+        let (pending, booted, staged) = match outcome {
+            CheckOutcome::UpdateAvailable { pending, booted, staged } => (pending, booted, staged),
             other => panic!("expected UpdateAvailable, got {other:?}"),
         };
         assert_eq!(pending.version, "42.20260512.0");
         assert!(pending.checksum.starts_with("cafebabe"));
         // Booted is still the older one.
         assert_eq!(booted.version, "42.20260510.0");
+        // This is a staged deployment (ready to reboot).
+        assert!(staged);
     }
 
     #[test]
     fn parse_pending_cached_update() {
         let json = include_str!("../tests/fixtures/status_pending_cached.json");
         let outcome = parse_status(json).expect("parse");
-        let pending = match outcome {
-            CheckOutcome::UpdateAvailable { pending, .. } => pending,
+        let (pending, staged) = match outcome {
+            CheckOutcome::UpdateAvailable { pending, staged, .. } => (pending, staged),
             other => panic!("expected UpdateAvailable, got {other:?}"),
         };
         assert_eq!(pending.version, "42.20260513.0");
         assert!(pending.checksum.starts_with("feedface"));
         // image_ref on the cached update should be preserved.
         assert!(pending.image_ref.unwrap().ends_with(":testing"));
+        // Cached update is NOT staged (metadata only, not downloaded).
+        assert!(!staged);
     }
 
     #[test]

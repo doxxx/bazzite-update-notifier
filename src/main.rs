@@ -317,25 +317,26 @@ async fn handle_outcome(
     force: bool,
 ) {
     match outcome {
-        CheckOutcome::UpdateAvailable { pending, .. } => {
-            // Resolve URLs (hits cache after the first time per-checksum).
-            let links = resolver.resolve(pending).await;
+        CheckOutcome::UpdateAvailable { pending, booted: _, staged } => {
+             // Resolve URLs (hits cache after the first time per-checksum).
+             let links = resolver.resolve(pending).await;
 
-            let is_new =
-                state.last_seen_pending_checksum.as_deref() != Some(pending.checksum.as_str());
-            state.record_seen_pending(&pending.checksum, &pending.version);
+             let is_new =
+                 state.last_seen_pending_checksum.as_deref() != Some(pending.checksum.as_str());
+             state.record_seen_pending(&pending.checksum, &pending.version);
 
-            // Update tray presentation regardless of toast suppression.
-            if let Some(h) = tray {
-                h.set(TrayPresentation {
-                    active: true,
-                    pending_version: Some(pending.version.clone()),
-                    links: Some(links.clone()),
-                    last_check_at: state.last_check_at,
-                    checking: false,
-                })
-                .await;
-            }
+             // Update tray presentation regardless of toast suppression.
+             if let Some(h) = tray {
+                 h.set(TrayPresentation {
+                     active: true,
+                     pending_version: Some(pending.version.clone()),
+                     staged: *staged,
+                     links: Some(links.clone()),
+                     last_check_at: state.last_check_at,
+                     checking: false,
+                 })
+                 .await;
+             }
 
             // Toast rules:
             //   - Always emit on a brand-new checksum.
@@ -365,6 +366,7 @@ async fn handle_outcome(
                 h.set(TrayPresentation {
                     active: false,
                     pending_version: None,
+                    staged: false,
                     links: None,
                     last_check_at: state.last_check_at,
                     checking: false,
@@ -463,5 +465,6 @@ fn fake_outcome() -> CheckOutcome {
             ),
             timestamp: 0,
         },
+        staged: true,
     }
 }
