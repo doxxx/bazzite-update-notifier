@@ -11,6 +11,10 @@ fn load_releases() -> Vec<GitHubRelease> {
     serde_json::from_str(include_str!("fixtures/github_releases_mixed.json")).unwrap()
 }
 
+fn load_actual_releases() -> Vec<GitHubRelease> {
+    serde_json::from_str(include_str!("fixtures/github_releases_actual.json")).unwrap()
+}
+
 fn load_topics() -> Vec<DiscourseTopic> {
     let page: DiscourseTagPage =
         serde_json::from_str(include_str!("fixtures/discourse_bazzite_news.json")).unwrap();
@@ -45,25 +49,25 @@ fn channel_inference_table() {
 #[test]
 fn github_stable_picks_stable() {
     let releases = load_releases();
-    let r = pick_github_release(&releases, &Channel::Stable, "42.20260512.0").expect("a release");
-    assert_eq!(r.tag_name, "stable-20260512");
+    let r = pick_github_release(&releases, &Channel::Stable, "42.20260511.0").expect("a release");
+    assert_eq!(r.tag_name, "44.20260511");
 }
 
 #[test]
 fn github_testing_picks_testing_not_unstable() {
-    // unstable-20260513 is dated *after* testing-20260513 in the fixture
+    // unstable-44.20260430 is dated earlier than testing-44.20260510 in the fixture
     // ordering; the channel filter must keep us on testing.
     let releases = load_releases();
-    let r = pick_github_release(&releases, &Channel::Testing, "42.20260513.0").expect("a release");
-    assert_eq!(r.tag_name, "testing-20260513");
+    let r = pick_github_release(&releases, &Channel::Testing, "42.20260510.0").expect("a release");
+    assert_eq!(r.tag_name, "testing-44.20260510");
 }
 
 #[test]
 fn github_falls_back_to_newest_in_channel_on_version_miss() {
     let releases = load_releases();
     let r = pick_github_release(&releases, &Channel::Stable, "42.20260901.0").expect("a release");
-    // Newest stable release in fixture.
-    assert_eq!(r.tag_name, "stable-20260512");
+    // Newest stable release in fixture (44.20260511).
+    assert_eq!(r.tag_name, "44.20260511");
 }
 
 #[test]
@@ -71,8 +75,8 @@ fn github_other_channel_no_filter() {
     let releases = load_releases();
     let r =
         pick_github_release(&releases, &Channel::Other("nightly".into()), "x").expect("a release");
-    // First in the list (newest overall).
-    assert_eq!(r.tag_name, "testing-20260513");
+    // First in the list (newest overall) is 44.20260511.
+    assert_eq!(r.tag_name, "44.20260511");
 }
 
 #[test]
@@ -112,4 +116,30 @@ fn discourse_url_round_trip() {
         build_discourse_url("https://example.com/", &topic),
         "https://example.com/t/bar-baz/42"
     );
+}
+
+#[test]
+fn actual_api_stable_picks_non_prerelease() {
+    // Verify that parsing actual GitHub API responses works correctly.
+    // Stable releases have no prefix (e.g., "44.20260511") and prerelease=false.
+    let releases = load_actual_releases();
+    let stable = pick_github_release(&releases, &Channel::Stable, "44.20260511").unwrap();
+    assert!(!stable.prerelease, "Stable release should not be prerelease");
+    assert!(stable.tag_name.parse::<f64>().is_ok() || !stable.tag_name.contains("testing"));
+}
+
+#[test]
+fn actual_api_testing_picks_prerelease() {
+    let releases = load_actual_releases();
+    let testing = pick_github_release(&releases, &Channel::Testing, "44.20260510").unwrap();
+    assert!(testing.prerelease, "Testing release should be prerelease");
+    assert!(testing.tag_name.contains("testing"), "Testing tag should contain 'testing'");
+}
+
+#[test]
+fn actual_api_unstable_picks_prerelease() {
+    let releases = load_actual_releases();
+    let unstable = pick_github_release(&releases, &Channel::Unstable, "44.20260430").unwrap();
+    assert!(unstable.prerelease, "Unstable release should be prerelease");
+    assert!(unstable.tag_name.contains("unstable"), "Unstable tag should contain 'unstable'");
 }

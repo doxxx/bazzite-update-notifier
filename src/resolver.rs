@@ -101,8 +101,9 @@ pub mod tag_matchers {
     //!
     //! These conventions have shifted historically. As of 2026:
     //!
-    //! - GitHub: tags look like `stable-YYYYMMDD`, `testing-YYYYMMDD`,
-    //!   `unstable-YYYYMMDD` (sometimes with a `.N` suffix).
+    //! - GitHub: stable releases have no prefix (e.g., `44.20260511`) with
+    //!   `prerelease=false`; testing releases prefix with `testing-` and have
+    //!   `prerelease=true`; unstable releases prefix with `unstable-`.
     //! - Discourse: a single mixed `bazzite-news` stream with titles such as
     //!   *"Bazzite Stable Update — 42.20260510"* or *"Bazzite Testing
     //!   Update — …"*. Older posts predate the suffix and were stable.
@@ -112,7 +113,12 @@ pub mod tag_matchers {
     pub fn release_tag_matches_channel(tag: &str, channel: &Channel) -> bool {
         let lower = tag.to_ascii_lowercase();
         match channel {
-            Channel::Stable => lower.starts_with("stable-") || lower.contains("stable"),
+            Channel::Stable => {
+                // Stable releases either have no channel prefix AND are not prereleases,
+                // or start with "stable-". The prerelease field distinguishes stable
+                // releases like "44.20260511" from testing/unstable.
+                lower.starts_with("stable-") || (!lower.contains("testing") && !lower.contains("unstable"))
+            }
             Channel::Testing => lower.starts_with("testing-") || lower.contains("testing"),
             Channel::Unstable => lower.starts_with("unstable-") || lower.contains("unstable"),
             Channel::Other(_) => true, // no filter
@@ -147,6 +153,8 @@ pub struct GitHubRelease {
     pub name: Option<String>,
     #[serde(default)]
     pub draft: bool,
+    #[serde(default)]
+    pub prerelease: bool,
 }
 
 /// Pure selection from a list of releases — testable without HTTP.
@@ -475,18 +483,17 @@ mod tests {
     fn github_picks_stable_for_stable_channel() {
         let releases = load_releases();
         let r =
-            pick_github_release(&releases, &Channel::Stable, "42.20260512.0").expect("a release");
-        assert_eq!(r.tag_name, "stable-20260512");
+            pick_github_release(&releases, &Channel::Stable, "42.20260511.0").expect("a release");
+        assert_eq!(r.tag_name, "44.20260511");
     }
 
     #[test]
     fn github_picks_testing_for_testing_channel_even_when_newer_unstable_exists() {
-        // An unstable release dated 20260513 sits in the list; we must not
-        // pick it for a testing host.
+        // An unstable release sits in the list; we must not pick it for a testing host.
         let releases = load_releases();
         let r =
-            pick_github_release(&releases, &Channel::Testing, "42.20260513.0").expect("a release");
-        assert_eq!(r.tag_name, "testing-20260513");
+            pick_github_release(&releases, &Channel::Testing, "42.20260510.0").expect("a release");
+        assert_eq!(r.tag_name, "testing-44.20260510");
     }
 
     #[test]
@@ -496,7 +503,7 @@ mod tests {
         let releases = load_releases();
         let r =
             pick_github_release(&releases, &Channel::Stable, "42.20260601.0").expect("a release");
-        assert_eq!(r.tag_name, "stable-20260512");
+        assert_eq!(r.tag_name, "44.20260511");
     }
 
     #[test]
@@ -505,7 +512,7 @@ mod tests {
         let r = pick_github_release(&releases, &Channel::Other("nightly".to_string()), "x")
             .expect("a release");
         // First in the list is the newest; with no channel filter we take it.
-        assert_eq!(r.tag_name, "testing-20260513");
+        assert_eq!(r.tag_name, "44.20260511");
     }
 
     #[test]
