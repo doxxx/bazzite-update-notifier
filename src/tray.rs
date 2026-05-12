@@ -17,7 +17,7 @@
 use chrono::{DateTime, Utc};
 use ksni::{menu::StandardItem, Category, Icon, MenuItem, Status, ToolTip, Tray, TrayMethods};
 use tokio::sync::mpsc;
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use crate::error::{Context, Result};
 use crate::icons;
@@ -48,7 +48,7 @@ pub struct TrayPresentation {
     /// Wall-clock time of the last successful check.
     pub last_check_at: Option<DateTime<Utc>>,
     /// Set during a manual recheck triggered by left-click; suppresses
-    /// the `Passive` description and shows "Checking for updates…".
+    /// the `Passive` description and shows "Checking for updates...".
     pub checking: bool,
 }
 
@@ -107,7 +107,7 @@ impl Tray for TrayState {
         let (title, description) = if self.presentation.checking {
             (
                 "Bazzite Update Notifier".to_string(),
-                "Checking for updates…".to_string(),
+                "Checking for updates...".to_string(),
             )
         } else if self.presentation.active {
             let v = self
@@ -155,11 +155,13 @@ impl Tray for TrayState {
                 .as_ref()
                 .map(|l| l.github_url.clone())
             {
+                info!("tray activation: opening GitHub release notes");
                 urls::open(&url);
             } else {
-                debug!("no resolved GitHub URL yet; ignoring activate");
+                debug!("tray activation: no resolved GitHub URL yet; ignoring activate");
             }
         } else {
+            debug!("tray activation: passive state — requesting recheck");
             send_event(&self.tx, TrayEvent::RecheckRequested);
         }
     }
@@ -307,7 +309,7 @@ impl TrayHandle {
     }
 
     /// Set just the `checking` flag — used to toggle the transient
-    /// "Checking for updates…" tooltip during a manual recheck.
+    /// "Checking for updates" tooltip during a manual recheck.
     pub async fn set_checking(&self, checking: bool) {
         self.handle
             .update(move |tray: &mut TrayState| {

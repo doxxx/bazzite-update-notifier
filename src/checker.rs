@@ -15,7 +15,7 @@ use std::time::Duration;
 
 use serde::Deserialize;
 use tokio::process::Command;
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use crate::error::{anyhow, bail, Context, Result};
 
@@ -179,6 +179,7 @@ fn rpm_ostree_bin() -> String {
 /// daemon fails fast on a non-Bazzite host instead of silently looping.
 pub async fn ensure_rpm_ostree_available() -> Result<()> {
     let bin = rpm_ostree_bin();
+    debug!("checking rpm-ostree availability: `{} --version`", bin);
     let status = Command::new(&bin)
         .arg("--version")
         .stdin(Stdio::null())
@@ -200,8 +201,24 @@ pub async fn check() -> Result<CheckOutcome> {
     let mut delay = Duration::from_millis(500);
 
     for attempt in 1..=MAX_ATTEMPTS {
+        debug!("check attempt {}/{}", attempt, MAX_ATTEMPTS);
         match run_check_once().await {
-            Ok(outcome) => return Ok(outcome),
+            Ok(outcome) => {
+                match &outcome {
+                    CheckOutcome::UpdateAvailable { pending, staged, .. } => {
+                        info!(
+                            version = %pending.version,
+                            checksum = %pending.checksum,
+                            staged,
+                            "update available"
+                        );
+                    }
+                    CheckOutcome::NoUpdate { .. } => {
+                        debug!("no update available");
+                    }
+                }
+                return Ok(outcome);
+            }
             Err(e) if attempt < MAX_ATTEMPTS && is_transient_lock_error(&e) => {
                 warn!(?e, attempt, "rpm-ostree busy; retrying after backoff");
                 tokio::time::sleep(delay).await;
@@ -221,6 +238,7 @@ async fn run_check_once() -> Result<CheckOutcome> {
     //    can mean "no update available" on some rpm-ostree versions, so we
     //    don't treat a non-zero status here as fatal — we log stderr and
     //    continue to `status --json` which is the source of truth.
+    debug!("running: {} upgrade --check", bin);
     let upgrade = Command::new(&bin)
         .args(["upgrade", "--check"])
         .stdin(Stdio::null())
@@ -245,6 +263,7 @@ async fn run_check_once() -> Result<CheckOutcome> {
     }
 
     // 2. Read structured deployment data.
+    debug!("running: {} status --json", bin);
     let status = Command::new(&bin)
         .args(["status", "--json"])
         .stdin(Stdio::null())

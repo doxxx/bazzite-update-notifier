@@ -32,7 +32,7 @@ use std::path::PathBuf;
 
 use notify_rust::{Hint, Notification, Timeout, Urgency};
 use once_cell::sync::OnceCell;
-use tracing::{debug, warn};
+use tracing::{info, warn};
 
 use crate::checker::Deployment;
 use crate::error::{Context, Result};
@@ -131,8 +131,8 @@ pub async fn toast(
     let discourse_url = links.discourse_url.clone();
     let desktop_entry = desktop_entry.to_string();
 
-    debug!(channel = ?links.channel, github = %github_url, discourse = %discourse_url,
-           "showing update toast");
+    info!(channel = ?links.channel, github = %github_url, discourse = %discourse_url,
+          "showing update toast");
 
     // notify-rust's wait_for_action API is blocking. We offload the whole
     // emit-and-wait sequence to a blocking task so we don't stall the

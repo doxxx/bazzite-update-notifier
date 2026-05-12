@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 
 use serde::Deserialize;
 use tokio::sync::Mutex;
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use crate::checker::Deployment;
 use crate::error::{bail, Result};
@@ -316,6 +316,7 @@ impl Resolver {
             }
         }
 
+        info!(channel = ?channel, version = %pending.version, "resolving release URLs");
         let github_url = self.resolve_github(&channel, &pending.version).await;
         let (discourse_url, headline) = self.resolve_discourse(&channel).await;
 
@@ -342,6 +343,7 @@ impl Resolver {
             "https://api.github.com/repos/{}/{}/releases?per_page=30",
             self.config.github_owner, self.config.github_repo
         );
+        info!("fetching GitHub releases for channel {:?} (version {})", channel, version);
         match self
             .http
             .get(&url)
@@ -352,8 +354,17 @@ impl Resolver {
             Ok(resp) if resp.status().is_success() => {
                 match resp.json::<Vec<GitHubRelease>>().await {
                     Ok(releases) => match pick_github_release(&releases, channel, version) {
-                        Some(r) => r.html_url.clone(),
-                        None => self.github_fallback_url(channel),
+                        Some(r) => {
+                            info!(
+                                "matched GitHub release: tag={}, url={}",
+                                r.tag_name, r.html_url
+                            );
+                            r.html_url.clone()
+                        }
+                        None => {
+                            warn!("no GitHub release matched for channel {:?}", channel);
+                            self.github_fallback_url(channel)
+                        }
                     },
                     Err(e) => {
                         warn!(?e, "GitHub releases JSON parse failed");
@@ -392,15 +403,19 @@ impl Resolver {
         let base = self.config.discourse_base.trim_end_matches('/');
         let tag = &self.config.discourse_tag;
         let url = format!("{}/tag/{}.json", base, tag);
-
+        info!("fetching Discourse tag page for channel {:?}", channel);
         match self.http.get(&url).send().await {
             Ok(resp) if resp.status().is_success() => match resp.json::<DiscourseTagPage>().await {
                 Ok(page) => match pick_discourse_topic(&page.topic_list.topics, channel) {
                     Some(t) => {
                         let url = build_discourse_url(base, t);
+                        info!(topic_id = t.id, "matched Discourse topic: title='{}'", t.title);
                         (url, Some(t.title.clone()))
                     }
-                    None => (self.discourse_fallback_url(), None),
+                    None => {
+                        warn!("no Discourse topic matched for channel {:?}", channel);
+                        (self.discourse_fallback_url(), None)
+                    }
                 },
                 Err(e) => {
                     warn!(?e, "Discourse JSON parse failed");
