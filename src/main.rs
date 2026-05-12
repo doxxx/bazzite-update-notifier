@@ -109,6 +109,7 @@ async fn main() -> Result<()> {
         checker::ensure_rpm_ostree_available()
             .await
             .context("rpm-ostree not available; this daemon requires an Atomic system")?;
+        debug!("rpm-ostree confirmed available");
     }
 
     let resolver = Resolver::new(ResolverConfig {
@@ -119,9 +120,11 @@ async fn main() -> Result<()> {
     })?;
 
     if cli.check_once {
+        info!("running single-shot check");
         return run_once(&cli, &config, &resolver).await;
     }
 
+    info!("daemon mode: check interval {}h, initial delay {}s", config.check_interval_hours, config.initial_delay_seconds);
     run_daemon(cli, config, resolver).await
 }
 
@@ -155,20 +158,20 @@ async fn run_once(cli: &Cli, config: &Config, resolver: &Resolver) -> Result<()>
 
     match &outcome {
         CheckOutcome::NoUpdate { .. } => {
-            println!("update: no");
+            info!("no update available");
         }
         CheckOutcome::UpdateAvailable { pending, .. } => {
-            println!("update: yes");
-            println!("pending version: {}", pending.version);
-            println!("pending checksum: {}", pending.checksum);
+            info!("update available");
+            info!("pending version: {}", pending.version);
+            info!("pending checksum: {}", pending.checksum);
             if let Some(ir) = &pending.image_ref {
                 println!("image_ref: {ir}");
             }
             let links = resolver.resolve(pending).await;
-            println!("github:    {}", links.github_url);
-            println!("discourse: {}", links.discourse_url);
+            info!("github: {}", links.github_url);
+            info!("discourse: {}", links.discourse_url);
             if let Some(h) = &links.headline {
-                println!("headline:  {h}");
+                info!("headline: {}", h);
             }
 
             if config.mode.includes_toast() {
@@ -196,8 +199,12 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
     }
     let (tray_handle, mut tray_rx): (Option<TrayHandle>, _) = if want_tray && !in_gamescope {
         let (h, rx) = tray::spawn().await?;
+        info!("tray icon initialized");
         (Some(h), Some(rx))
     } else {
+        if !want_tray {
+            info!("tray disabled by configuration");
+        }
         (None, None)
     };
 
@@ -230,7 +237,7 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
     // Initial sleep — gives the user session time to fully start before
     // we hit the network. Skipped in fake mode so QA cycles are fast.
     if !cli.fake_update() {
-        debug!("initial delay: {}s", config.initial_delay_seconds);
+        info!("initial delay: {}s", config.initial_delay_seconds);
         let initial = Duration::from_secs(config.initial_delay_seconds);
         tokio::select! {
             _ = tokio::time::sleep(initial) => {}
@@ -238,12 +245,17 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
                 debug!("recheck during initial delay; skipping to first check");
             }
             _ = shutdown.notified() => {
+                debug!("shutdown before first check");
                 return Ok(());
             }
         }
+    } else {
+        info!("fake-update mode: skipping initial delay");
     }
 
     loop {
+        info!("checking for updates");
+
         // Mark "checking" in the tray (transient).
         if let Some(h) = &tray_handle {
             h.set_checking(true).await;
@@ -263,6 +275,7 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
                     // User explicitly asked for a recheck: clear the
                     // dismiss flag so the same pending checksum can
                     // re-toast.
+                    info!("recheck requested by user");
                     persisted.dismissed_for_checksum = None;
                 }
                 handle_outcome(
@@ -276,10 +289,12 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
                 .await;
                 if let Err(e) = persisted.save(&state_path) {
                     warn!(?e, path = %state_path.display(), "state save failed");
+                } else {
+                    debug!("state saved successfully");
                 }
             }
             Err(e) => {
-                warn!(?e, "rpm-ostree check failed");
+                warn!(?e, "update check failed");
                 if let Some(h) = &tray_handle {
                     // Don't change presentation on transient failure —
                     // just clear the "checking" flag.
@@ -300,6 +315,7 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
                     remaining = remaining.saturating_sub(chunk);
                     // Refresh tray to update tooltip relative time.
                     if let Some(ref h) = tray_handle {
+                        debug!("refreshing tray");
                         h.refresh().await;
                     }
                 }
@@ -311,13 +327,17 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
                     info!("shutdown signal received");
                     shutdown_received = true;
                 }
-            }
-        }
-        if shutdown_received {
-            break;
-        }
-    }
-    Ok(())
+         }
+     }
+     if shutdown_received {
+         info!("shutdown signal received, exiting");
+         break;
+     }
+ }
+
+ info!("daemon stopped");
+
+ Ok(())
 }
 
 /// Drive presentation + toast emission from a fresh check outcome.
@@ -335,6 +355,12 @@ async fn handle_outcome(
 ) {
     match outcome {
         CheckOutcome::UpdateAvailable { pending, booted: _, staged } => {
+             info!(
+                 version = %pending.version,
+                 checksum = %pending.checksum,
+                 staged = *staged,
+                 "update available"
+             );
              // Resolve URLs (hits cache after the first time per-checksum).
              let links = resolver.resolve(pending).await;
 
@@ -364,6 +390,7 @@ async fn handle_outcome(
             let suppressed = config.behavior.suppress_after_dismiss && dismissed_now;
             let should_toast = config.mode.includes_toast() && (is_new || force || !suppressed);
             if should_toast {
+                info!("emitting toast notification");
                 emit_toast(pending, &links, config, state).await;
             } else {
                 debug!(
@@ -401,15 +428,19 @@ async fn emit_toast(
     state: &mut State,
 ) {
     let action = DefaultAction::from_config_str(&config.behavior.toast_default_action);
+    info!(version = %pending.version, channel = ?links.channel, "emitting toast notification");
     match notifier::toast(pending, links, action, DESKTOP_ENTRY).await {
         Ok(ToastResult::Dismissed) => {
+            debug!("toast dismissed by user");
             state.mark_dismissed();
             state.last_notified_at = Some(Utc::now());
         }
         Ok(ToastResult::Opened) => {
+            debug!("toast action taken: user opened URL");
             state.last_notified_at = Some(Utc::now());
         }
         Ok(ToastResult::NoAction) => {
+            debug!("toast timeout: no user action");
             state.last_notified_at = Some(Utc::now());
         }
         Err(e) => {
@@ -435,6 +466,7 @@ async fn pump_tray_events(
     while let Some(ev) = rx.recv().await {
         match ev {
             TrayEvent::RecheckRequested => {
+                info!("tray event: recheck requested");
                 force_resurface.store(true, std::sync::atomic::Ordering::SeqCst);
                 recheck.notify_one();
             }
