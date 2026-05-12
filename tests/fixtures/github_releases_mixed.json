@@ -1,36 +1,36 @@
 [
   {
-    "tag_name": "testing-20260513",
-    "name": "Testing 42.20260513.0",
-    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/testing-20260513",
-    "draft": false,
-    "prerelease": true
-  },
-  {
-    "tag_name": "stable-20260512",
-    "name": "Stable 42.20260512.0",
-    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/stable-20260512",
+    "tag_name": "44.20260511",
+    "name": "44.20260511: Stable (F44.20260511)",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/44.20260511",
     "draft": false,
     "prerelease": false
   },
   {
-    "tag_name": "stable-20260510",
-    "name": "Stable 42.20260510.0",
-    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/stable-20260510",
-    "draft": false,
-    "prerelease": false
-  },
-  {
-    "tag_name": "unstable-20260513",
-    "name": "Unstable 42.20260513.0",
-    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/unstable-20260513",
+    "tag_name": "testing-44.20260510",
+    "name": "testing-44.20260510: Testing (F44.20260510, #b694790)",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/testing-44.20260510",
     "draft": false,
     "prerelease": true
   },
   {
-    "tag_name": "testing-20260510",
-    "name": "Testing 42.20260510.0",
-    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/testing-20260510",
+    "tag_name": "44.20260508",
+    "name": "44.20260508: Stable (F44.20260508)",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/44.20260508",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "unstable-44.20260430",
+    "name": "unstable-44.20260430: Unstable (F44.20260430, #b143a03)",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/unstable-44.20260430",
+    "draft": false,
+    "prerelease": true
+  },
+  {
+    "tag_name": "testing-44.20260510.1",
+    "name": "testing-44.20260510.1: Testing (F44.20260510, #abc123)",
+    "html_url": "https://github.com/ublue-os/bazzite/releases/tag/testing-44.20260510.1",
     "draft": false,
     "prerelease": true
   }
