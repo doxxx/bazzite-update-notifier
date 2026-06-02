@@ -124,7 +124,10 @@ async fn main() -> Result<()> {
         return run_once(&cli, &config, &resolver).await;
     }
 
-    info!("daemon mode: check interval {}h, initial delay {}s", config.check_interval_hours, config.initial_delay_seconds);
+    info!(
+        "daemon mode: check interval {}h, initial delay {}s",
+        config.check_interval_hours, config.initial_delay_seconds
+    );
     run_daemon(cli, config, resolver).await
 }
 
@@ -327,17 +330,17 @@ async fn run_daemon(cli: Cli, config: Config, resolver: Resolver) -> Result<()> 
                     info!("shutdown signal received");
                     shutdown_received = true;
                 }
-         }
-     }
-     if shutdown_received {
-         info!("shutdown signal received, exiting");
-         break;
-     }
- }
+            }
+        }
+        if shutdown_received {
+            info!("shutdown signal received, exiting");
+            break;
+        }
+    }
 
- info!("daemon stopped");
+    info!("daemon stopped");
 
- Ok(())
+    Ok(())
 }
 
 /// Drive presentation + toast emission from a fresh check outcome.
@@ -354,32 +357,36 @@ async fn handle_outcome(
     force: bool,
 ) {
     match outcome {
-        CheckOutcome::UpdateAvailable { pending, booted: _, staged } => {
-             info!(
-                 version = %pending.version,
-                 checksum = %pending.checksum,
-                 staged = *staged,
-                 "update available"
-             );
-             // Resolve URLs (hits cache after the first time per-checksum).
-             let links = resolver.resolve(pending).await;
+        CheckOutcome::UpdateAvailable {
+            pending,
+            booted: _,
+            staged,
+        } => {
+            info!(
+                version = %pending.version,
+                checksum = %pending.checksum,
+                staged = *staged,
+                "update available"
+            );
+            // Resolve URLs (hits cache after the first time per-checksum).
+            let links = resolver.resolve(pending).await;
 
-             let is_new =
-                 state.last_seen_pending_checksum.as_deref() != Some(pending.checksum.as_str());
-             state.record_seen_pending(&pending.checksum, &pending.version);
+            let is_new =
+                state.last_seen_pending_checksum.as_deref() != Some(pending.checksum.as_str());
+            state.record_seen_pending(&pending.checksum, &pending.version);
 
-             // Update tray presentation regardless of toast suppression.
-             if let Some(h) = tray {
-                 h.set(TrayPresentation {
-                     active: true,
-                     pending_version: Some(pending.version.clone()),
-                     staged: *staged,
-                     links: Some(links.clone()),
-                     last_check_at: state.last_check_at,
-                     checking: false,
-                 })
-                 .await;
-             }
+            // Update tray presentation regardless of toast suppression.
+            if let Some(h) = tray {
+                h.set(TrayPresentation {
+                    active: true,
+                    pending_version: Some(pending.version.clone()),
+                    staged: *staged,
+                    links: Some(links.clone()),
+                    last_check_at: state.last_check_at,
+                    checking: false,
+                })
+                .await;
+            }
 
             // Toast rules:
             //   - Always emit on a brand-new checksum.

@@ -117,7 +117,8 @@ pub mod tag_matchers {
                 // Stable releases either have no channel prefix AND are not prereleases,
                 // or start with "stable-". The prerelease field distinguishes stable
                 // releases like "44.20260511" from testing/unstable.
-                lower.starts_with("stable-") || (!lower.contains("testing") && !lower.contains("unstable"))
+                lower.starts_with("stable-")
+                    || (!lower.contains("testing") && !lower.contains("unstable"))
             }
             Channel::Testing => lower.starts_with("testing-") || lower.contains("testing"),
             Channel::Unstable => lower.starts_with("unstable-") || lower.contains("unstable"),
@@ -343,7 +344,10 @@ impl Resolver {
             "https://api.github.com/repos/{}/{}/releases?per_page=30",
             self.config.github_owner, self.config.github_repo
         );
-        info!("fetching GitHub releases for channel {:?} (version {})", channel, version);
+        info!(
+            "fetching GitHub releases for channel {:?} (version {})",
+            channel, version
+        );
         match self
             .http
             .get(&url)
@@ -409,7 +413,10 @@ impl Resolver {
                 Ok(page) => match pick_discourse_topic(&page.topic_list.topics, channel) {
                     Some(t) => {
                         let url = build_discourse_url(base, t);
-                        info!(topic_id = t.id, "matched Discourse topic: title='{}'", t.title);
+                        info!(
+                            topic_id = t.id,
+                            "matched Discourse topic: title='{}'", t.title
+                        );
                         (url, Some(t.title.clone()))
                     }
                     None => {

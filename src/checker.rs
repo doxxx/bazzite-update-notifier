@@ -205,7 +205,9 @@ pub async fn check() -> Result<CheckOutcome> {
         match run_check_once().await {
             Ok(outcome) => {
                 match &outcome {
-                    CheckOutcome::UpdateAvailable { pending, staged, .. } => {
+                    CheckOutcome::UpdateAvailable {
+                        pending, staged, ..
+                    } => {
                         info!(
                             version = %pending.version,
                             checksum = %pending.checksum,
@@ -332,7 +334,11 @@ mod tests {
         let json = include_str!("../tests/fixtures/status_pending_staged.json");
         let outcome = parse_status(json).expect("parse");
         let (pending, booted, staged) = match outcome {
-            CheckOutcome::UpdateAvailable { pending, booted, staged } => (pending, booted, staged),
+            CheckOutcome::UpdateAvailable {
+                pending,
+                booted,
+                staged,
+            } => (pending, booted, staged),
             other => panic!("expected UpdateAvailable, got {other:?}"),
         };
         assert_eq!(pending.version, "42.20260512.0");
@@ -348,7 +354,9 @@ mod tests {
         let json = include_str!("../tests/fixtures/status_pending_cached.json");
         let outcome = parse_status(json).expect("parse");
         let (pending, staged) = match outcome {
-            CheckOutcome::UpdateAvailable { pending, staged, .. } => (pending, staged),
+            CheckOutcome::UpdateAvailable {
+                pending, staged, ..
+            } => (pending, staged),
             other => panic!("expected UpdateAvailable, got {other:?}"),
         };
         assert_eq!(pending.version, "42.20260513.0");
