@@ -124,7 +124,10 @@ fn actual_api_stable_picks_non_prerelease() {
     // Stable releases have no prefix (e.g., "44.20260511") and prerelease=false.
     let releases = load_actual_releases();
     let stable = pick_github_release(&releases, &Channel::Stable, "44.20260511").unwrap();
-    assert!(!stable.prerelease, "Stable release should not be prerelease");
+    assert!(
+        !stable.prerelease,
+        "Stable release should not be prerelease"
+    );
     assert!(stable.tag_name.parse::<f64>().is_ok() || !stable.tag_name.contains("testing"));
 }
 
@@ -133,7 +136,10 @@ fn actual_api_testing_picks_prerelease() {
     let releases = load_actual_releases();
     let testing = pick_github_release(&releases, &Channel::Testing, "44.20260510").unwrap();
     assert!(testing.prerelease, "Testing release should be prerelease");
-    assert!(testing.tag_name.contains("testing"), "Testing tag should contain 'testing'");
+    assert!(
+        testing.tag_name.contains("testing"),
+        "Testing tag should contain 'testing'"
+    );
 }
 
 #[test]
@@ -141,5 +147,8 @@ fn actual_api_unstable_picks_prerelease() {
     let releases = load_actual_releases();
     let unstable = pick_github_release(&releases, &Channel::Unstable, "44.20260430").unwrap();
     assert!(unstable.prerelease, "Unstable release should be prerelease");
-    assert!(unstable.tag_name.contains("unstable"), "Unstable tag should contain 'unstable'");
+    assert!(
+        unstable.tag_name.contains("unstable"),
+        "Unstable tag should contain 'unstable'"
+    );
 }

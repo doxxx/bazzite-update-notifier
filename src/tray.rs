@@ -120,10 +120,7 @@ impl Tray for TrayState {
             } else {
                 format!("Version {v} ready to install")
             };
-            (
-                "Bazzite update available".to_string(),
-                desc,
-            )
+            ("Bazzite update available".to_string(), desc)
         } else {
             let when = match self.presentation.last_check_at {
                 Some(t) => format_relative(t),
