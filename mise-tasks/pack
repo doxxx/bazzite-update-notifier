@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#MISE description="Assemble release bundle tarball into dist/"
+#MISE depends=["build"]
+
+set -euo pipefail
+
+VERSION="${VERSION:-dev}"
+DIRNAME="bazzite-update-notifier-${VERSION}"
+TARBALL="${DIRNAME}.tar.gz"
+
+rm -rf dist
+mkdir -p "dist/${DIRNAME}"
+
+cp target/release/bazzite-update-notifier     "dist/${DIRNAME}/"
+cp packaging/install.sh                       "dist/${DIRNAME}/"
+cp packaging/bazzite-update-notifier.service  "dist/${DIRNAME}/"
+cp packaging/bazzite-update-notifier.desktop  "dist/${DIRNAME}/"
+cp assets/icon-update-available.png           "dist/${DIRNAME}/"
+
+tar -czf "dist/${TARBALL}" -C dist "${DIRNAME}"
+rm -rf "dist/${DIRNAME}"
+
+echo "Created dist/${TARBALL}"
