@@ -1,3 +1,7 @@
 [tools]
 act = "latest"
 rust = "latest"
+
+[tasks.build]
+description = "Build release binary"
+run = "cargo build --release"

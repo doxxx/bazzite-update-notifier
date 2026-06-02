@@ -29,12 +29,22 @@ CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/bazzite-update-notifier"
 # Resolve where this script lives so it works whether invoked by absolute
 # or relative path.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
 
-BIN_SRC="${REPO_ROOT}/target/release/bazzite-update-notifier"
+# Support two layouts:
+#   release bundle — binary is co-located with this script in the same directory
+#   source checkout — binary is at <repo-root>/target/release/
+if [[ -x "${SCRIPT_DIR}/bazzite-update-notifier" ]]; then
+    BIN_SRC="${SCRIPT_DIR}/bazzite-update-notifier"
+    ICON_SRC="${SCRIPT_DIR}/icon-update-available.png"
+else
+    REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
+    BIN_SRC="${REPO_ROOT}/target/release/bazzite-update-notifier"
+    ICON_SRC="${REPO_ROOT}/assets/icon-update-available.png"
+fi
+
 if [[ ! -x "${BIN_SRC}" ]]; then
     echo "error: ${BIN_SRC} not found or not executable." >&2
-    echo "       Run \`cargo build --release\` first." >&2
+    echo "       Run \`mise run build\` (or \`cargo build --release\`) first." >&2
     exit 1
 fi
 
@@ -52,7 +62,7 @@ install -m 0644 "${SCRIPT_DIR}/bazzite-update-notifier.desktop" \
     "${AUTOSTART_DIR}/bazzite-update-notifier.desktop"
 
 echo "Installing icon -> ${ICON_DIR}"
-install -m 0644 "${REPO_ROOT}/assets/icon-update-available.png" \
+install -m 0644 "${ICON_SRC}" \
     "${ICON_DIR}/bazzite-update-notifier.png"
 
 # Reload and enable. We use --now so the daemon starts immediately;
