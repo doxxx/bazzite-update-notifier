@@ -16,6 +16,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -45,9 +46,9 @@ jobs:
       - name: Assemble release bundle
         run: mise run pack
         env:
-          VERSION: ${{ needs.release-please.outputs.tag_name }}
+          VERSION: v${{ needs.release-please.outputs.version }}
 
       - name: Upload release artifacts
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }} dist/bazzite-update-notifier-${{ needs.release-please.outputs.tag_name }}.tar.gz
+        run: gh release upload ${{ needs.release-please.outputs.tag_name }} dist/bazzite-update-notifier-v${{ needs.release-please.outputs.version }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
