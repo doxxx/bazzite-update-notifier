@@ -1,6 +1,6 @@
 [package]
 name = "bazzite-update-notifier"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "User-session daemon that surfaces Bazzite (rpm-ostree) updates as toasts and/or a tray icon."
 license = "MIT OR Apache-2.0"
