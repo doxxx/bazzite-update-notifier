@@ -67,9 +67,7 @@ See `config/default.toml` in this repository for all available keys.
 ## Development
 
 ```sh
-cargo fmt --check
-cargo clippy -- -D warnings
-cargo test
+mise run check
 ```
 
 CI runs the same checks on every push.

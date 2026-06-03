@@ -5,3 +5,11 @@ rust = "latest"
 [tasks.build]
 description = "Build release binary"
 run = "cargo build --release"
+
+[tasks.check]
+description = "Run format check, clippy, and tests"
+run = [
+  "cargo fmt --check",
+  "cargo clippy -- -D warnings",
+  "cargo test",
+]
