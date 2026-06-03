@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/doxxx/bazzite-update-notifier/compare/bazzite-update-notifier-v0.2.0...bazzite-update-notifier-v0.2.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* **ci:** use version output to avoid duplicate name in release tarball ([9629a06](https://github.com/doxxx/bazzite-update-notifier/commit/9629a063ad4d9756dcdadefdba017a34b5c247f2))
+
 ## [0.2.0](https://github.com/doxxx/bazzite-update-notifier/compare/bazzite-update-notifier-v0.1.0...bazzite-update-notifier-v0.2.0) (2026-06-03)
 
 
