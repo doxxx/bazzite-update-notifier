@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/doxxx/bazzite-update-notifier/compare/bazzite-update-notifier-v0.2.1...bazzite-update-notifier-v0.3.0) (2026-06-06)
+
+
+### Features
+
+* **uninstall:** add uninstall.sh script to the distribution ([3b4f193](https://github.com/doxxx/bazzite-update-notifier/commit/3b4f19337123f13f15dbab0c947b41f022cc4d72))
+
 ## [0.2.1](https://github.com/doxxx/bazzite-update-notifier/compare/bazzite-update-notifier-v0.2.0...bazzite-update-notifier-v0.2.1) (2026-06-03)
 
 
