@@ -16,22 +16,53 @@ freedesktop standards (libnotify + StatusNotifierItem).
 - `tray` — show a tray icon (Active when an update is staged, Passive otherwise).
 - `both` — both of the above.
 
-## Quick start
+## Installing From Release
 
-```sh
-cargo build --release
-./target/release/bazzite-update-notifier --check-once --verbose
-```
+To install from a release:
 
-To install as a `--user` systemd service:
-
-```sh
-./packaging/install.sh
-```
+1. Download the latest from the Release page (e.g
+   `bazzite-update-notifier-v0.2.1.tar.gz`).
+2. Extract the files into a directory. From the console you can use a command
+   like this:
+   ```sh
+   tar -zxf bazzite-update-notifier-v0.2.1.tar.gz
+   ```
+   This should create a `bazzite-update-notifier-v0.2.1` subfolder (or whatever
+   version you downloaded).
+3. In the console, go to the extracted (e.g. `bazzite-update-notifier-v0.2.1`)
+   folder and execute the following command:
+   ```sh
+   ./install.sh
+   ```
 
 The installer copies the binary to `~/.local/bin`, the systemd unit to
 `~/.config/systemd/user/`, the autostart `.desktop` to `~/.config/autostart/`,
-then enables and starts the service.
+and the icon file to `~/.local/share/icons/hicolor/64x64/apps`, then enables
+and starts the service.
+
+To uninstall:
+
+1. In the console, go back to the folder you installed from, re-extracting the
+   original release archive if necessary.
+2. Run the following command:
+   ```sh
+   ./uninstall.sh
+   ```
+
+That will remove all the installed files and the systemd service.
+
+## Installing From Source
+
+```sh
+mise build
+./packaging/install.sh
+```
+
+To uninstall:
+
+```sh
+./packaging/uninstall.sh
+```
 
 ## CLI
 
