@@ -13,6 +13,7 @@ mkdir -p "dist/${DIRNAME}"
 
 cp target/release/bazzite-update-notifier     "dist/${DIRNAME}/"
 cp packaging/install.sh                       "dist/${DIRNAME}/"
+cp packaging/uninstall.sh                     "dist/${DIRNAME}/"
 cp packaging/bazzite-update-notifier.service  "dist/${DIRNAME}/"
 cp packaging/bazzite-update-notifier.desktop  "dist/${DIRNAME}/"
 cp assets/icon-update-available.png           "dist/${DIRNAME}/"
